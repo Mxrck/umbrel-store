@@ -52,7 +52,7 @@ support: https://github.com/OpenTodoApp/OpenTodo/issues
 port: 8418
 gallery: []
 path: ""
-icon: icon.png
+icon: https://raw.githubusercontent.com/Mxrck/umbrel-store/master/mxrck-opentodo/icon.png
 
 defaultUsername: ""
 defaultPassword: ""
