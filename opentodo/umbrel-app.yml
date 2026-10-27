@@ -52,6 +52,7 @@ support: https://github.com/OpenTodoApp/OpenTodo/issues
 port: 8418
 gallery: []
 path: ""
+icon: icon.png
 
 defaultUsername: ""
 defaultPassword: ""
