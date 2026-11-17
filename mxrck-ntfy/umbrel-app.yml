@@ -13,6 +13,14 @@ environment:
       - app
     default: ""
     note: Password for that administrator. It is applied only when the user does not exist yet, so updating it later does not silently change the password of the running account. Leave empty to skip creating the account (then use `docker exec` and the ntfy CLI).
+  - name: NTFY_ADMIN_FORCE_PASSWORD
+    services:
+      - app
+    default: "false"
+    options:
+      - "false"
+      - "true"
+    note: Set to true for one restart to apply a new NTFY_ADMIN_PASSWORD to an existing account, then set it back to false. Normally the password is only used when the account is created.
   - name: NTFY_ENABLE_LOGIN
     services:
       - app

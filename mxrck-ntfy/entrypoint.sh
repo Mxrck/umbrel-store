@@ -16,7 +16,13 @@ sleep 3
 
 if [ -n "${NTFY_ADMIN_USER}" ] && [ -n "${NTFY_ADMIN_PASSWORD}" ]; then
   if ntfy user list 2>/dev/null | awk 'NR>1 {print $1}' | grep -qx "${NTFY_ADMIN_USER}"; then
-    echo "[entrypoint] user ${NTFY_ADMIN_USER} already exists, leaving it untouched"
+    if [ "${NTFY_ADMIN_FORCE_PASSWORD}" = "true" ]; then
+      echo "[entrypoint] NTFY_ADMIN_FORCE_PASSWORD=true: applying the configured password"
+      NTFY_PASSWORD="${NTFY_ADMIN_PASSWORD}" ntfy user change-pass "${NTFY_ADMIN_USER}" \
+        && echo "[entrypoint] password updated; set NTFY_ADMIN_FORCE_PASSWORD back to false"
+    else
+      echo "[entrypoint] user ${NTFY_ADMIN_USER} already exists, leaving it untouched"
+    fi
   else
     echo "[entrypoint] creating admin user ${NTFY_ADMIN_USER}"
     if NTFY_PASSWORD="${NTFY_ADMIN_PASSWORD}" ntfy user add --role=admin "${NTFY_ADMIN_USER}"; then

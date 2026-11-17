@@ -49,4 +49,5 @@ services:
       # Only the shell script reads these; the server ignores them.
       NTFY_ADMIN_USER: ${NTFY_ADMIN_USER:-marco}
       NTFY_ADMIN_PASSWORD: ${NTFY_ADMIN_PASSWORD:-}
+      NTFY_ADMIN_FORCE_PASSWORD: ${NTFY_ADMIN_FORCE_PASSWORD:-false}
     container_name: mxrck-ntfy_app_1
