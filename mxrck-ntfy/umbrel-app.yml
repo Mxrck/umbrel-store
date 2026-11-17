@@ -6,13 +6,13 @@ environment:
   - name: NTFY_ADMIN_USER
     services:
       - app
-    default: "marco"
-    note: Username of the administrator created on first start. Change it only before installing, or delete the app data folder to start over.
+    default: "umbrel"
+    note: Username of the administrator created on first start. Change it to whatever you want before opening the app; once the account exists, changing this does nothing (delete the app data folder to start over).
   - name: NTFY_ADMIN_PASSWORD
     services:
       - app
     default: ""
-    note: Password for that administrator. It is applied only when the user does not exist yet, so updating it later does not silently change the password of the running account. Leave empty to skip creating the account (then use `docker exec` and the ntfy CLI).
+    note: Password for that administrator. Leave empty to get a random one on first start, written to data/admin-password.txt in the app data folder (or the umbrel app password when that exists). It is applied only when the user does not exist yet, so changing it later does not silently change the running account; use NTFY_ADMIN_FORCE_PASSWORD for that.
   - name: NTFY_ADMIN_FORCE_PASSWORD
     services:
       - app
@@ -56,7 +56,7 @@ environment:
     note: How long messages are kept for clients that reconnect, such as 12h or 48h.
 category: automation
 name: ntfy (own admin)
-version: "2.38.1"
+version: "2.38.1-2"
 tagline: Pub-sub push notifications with an admin user you configure yourself
 description: >-
   ntfy (pronounced notify) is a simple HTTP-based pub-sub notification service: publish a message with a plain HTTP
@@ -85,7 +85,7 @@ gallery: []
 path: ""
 icon: https://raw.githubusercontent.com/Mxrck/umbrel-store/master/mxrck-ntfy/icon.png
 
-defaultUsername: ""
+defaultUsername: "umbrel"
 defaultPassword: ""
 
 submitter: ntfy
