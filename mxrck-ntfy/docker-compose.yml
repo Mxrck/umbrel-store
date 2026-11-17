@@ -44,7 +44,9 @@ services:
       NTFY_ENABLE_LOGIN: ${NTFY_ENABLE_LOGIN:-true}
       NTFY_AUTH_DEFAULT_ACCESS: ${NTFY_AUTH_DEFAULT_ACCESS:-deny-all}
       NTFY_CACHE_DURATION: ${NTFY_CACHE_DURATION:-12h}
-      NTFY_UPSTREAM_BASE_URL: ${NTFY_UPSTREAM_BASE_URL:-https://ntfy.sh}
+      # ntfy refuses to start when upstream-base-url is set without base-url, so both
+      # default to empty: the iOS relay is only enabled when you set both of them.
+      NTFY_UPSTREAM_BASE_URL: ${NTFY_UPSTREAM_BASE_URL:-}
       NTFY_BASE_URL: ${NTFY_BASE_URL:-}
       # Only the shell script reads these; the server ignores them.
       NTFY_ADMIN_USER: ${NTFY_ADMIN_USER:-marco}

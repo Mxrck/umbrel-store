@@ -47,8 +47,8 @@ environment:
   - name: NTFY_UPSTREAM_BASE_URL
     services:
       - app
-    default: "https://ntfy.sh"
-    note: Only needed for instant notifications on iOS. Empty disables it.
+    default: ""
+    note: Relay used only for instant notifications on iOS, such as https://ntfy.sh. Requires NTFY_BASE_URL to be set as well; ntfy refuses to start otherwise. Leave both empty unless you need iOS. Base URL note above.
   - name: NTFY_CACHE_DURATION
     services:
       - app
