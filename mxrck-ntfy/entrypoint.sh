@@ -26,9 +26,10 @@ if [ -n "${NTFY_ADMIN_USER}" ] && [ -n "${NTFY_ADMIN_PASSWORD}" ]; then
   else
     echo "[entrypoint] creating admin user ${NTFY_ADMIN_USER}"
     if NTFY_PASSWORD="${NTFY_ADMIN_PASSWORD}" ntfy user add --role=admin "${NTFY_ADMIN_USER}"; then
-      # Full access to every topic, including the ones UnifiedPush creates later.
-      ntfy access "${NTFY_ADMIN_USER}" '*' read-write || true
-      echo "[entrypoint] admin ${NTFY_ADMIN_USER} created with full topic access"
+      # No `ntfy access` needed: admin users bypass access control entirely, so this
+      # account can publish and subscribe to every topic, including the ones
+      # UnifiedPush creates later (verified with ntfy 2.38.1).
+      echo "[entrypoint] admin ${NTFY_ADMIN_USER} created; admins bypass topic access control"
     else
       echo "[entrypoint] ERROR: could not create ${NTFY_ADMIN_USER}" >&2
     fi
