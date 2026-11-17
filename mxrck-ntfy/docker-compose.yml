@@ -5,7 +5,7 @@ services:
     environment:
       APP_HOST: mxrck-ntfy_app_1
       APP_PORT: 80
-      # ntfy authenticates its own clients (basic auth, tokens, or the secret in a
+      # ntfy authenticates its own clients (basic auth, tokens, or the secret inside a
       # UnifiedPush endpoint), so it must not sit behind the Umbrel login: phones and
       # scripts cannot send that cookie.
       PROXY_AUTH_ADD: "false"
@@ -30,11 +30,67 @@ services:
     depends_on:
       init_data:
         condition: service_completed_successfully
-    entrypoint:
-      - /bin/sh
-      - /entrypoint.sh
+    # The startup logic lives here, in the compose file, on purpose. umbrel copies the
+    # app directory into APP_DATA_DIR at install time and does NOT refresh those files on
+    # update, so a mounted entrypoint.sh stays frozen at whatever version installed the
+    # app. docker-compose.yml itself IS regenerated on update.
+    #
+    # What it does, and why: the official package runs `ntfy user add || true` on every
+    # start, which rewrites the password hash with the container's generated password, so
+    # the password shown in the UI stops working after a restart or update. This creates
+    # the admin only when it is missing and never touches it again.
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        set -e
+        AUTH_DIR=$$(dirname "$${NTFY_AUTH_FILE:-/var/lib/ntfy/user.db}")
+        # Password resolution: 1) the one you configure, 2) the per-install password
+        # umbrel generates, 3) a random one stored next to the auth database. An app
+        # store package cannot ship a fixed password, so (3) means a fresh install with
+        # no configuration gets a random one, never a known default.
+        resolve_password() {
+          if [ -n "$${NTFY_ADMIN_PASSWORD:-}" ]; then printf '%s' "$${NTFY_ADMIN_PASSWORD}"; return; fi
+          if [ -n "$${UMBREL_APP_PASSWORD:-}" ]; then printf '%s' "$${UMBREL_APP_PASSWORD}"; return; fi
+          pwfile="$${AUTH_DIR}/admin-password.txt"
+          if [ ! -s "$${pwfile}" ]; then
+            # hex, not base64: nothing to quote in a shell or a URL.
+            head -c 16 /dev/urandom | od -An -tx1 | tr -d ' \n' > "$${pwfile}"
+            chmod 600 "$${pwfile}"
+            echo "[entrypoint] generated a random admin password at $${pwfile}" >&2
+          fi
+          cat "$${pwfile}"
+        }
+        ntfy serve &
+        serve_pid=$$!
+        sleep 3
+        ADMIN_USER="$${NTFY_ADMIN_USER:-umbrel}"
+        # `ntfy user list` prints "user <name> (role: ..., tier: ...)" per line, not columns.
+        if ntfy user list 2>/dev/null | awk '/^user /{print $$2}' | grep -qx "$${ADMIN_USER}"; then
+          if [ "$${NTFY_ADMIN_FORCE_PASSWORD}" = "true" ]; then
+            echo "[entrypoint] NTFY_ADMIN_FORCE_PASSWORD=true: applying the configured password to $${ADMIN_USER}"
+            if NTFY_PASSWORD="$$(resolve_password)" ntfy user change-pass "$${ADMIN_USER}"; then
+              echo "[entrypoint] password updated; set NTFY_ADMIN_FORCE_PASSWORD back to false"
+            fi
+          else
+            echo "[entrypoint] user $${ADMIN_USER} already exists, leaving it untouched"
+          fi
+        else
+          echo "[entrypoint] creating admin user $${ADMIN_USER}"
+          if NTFY_PASSWORD="$$(resolve_password)" ntfy user add --role=admin "$${ADMIN_USER}"; then
+            # No `ntfy access` needed: admins bypass access control, so this account can
+            # publish and subscribe to every topic, including the ones UnifiedPush
+            # creates later (verified with ntfy 2.38.1).
+            echo "[entrypoint] admin $${ADMIN_USER} created; admins bypass topic access control"
+            if [ -z "$${NTFY_ADMIN_PASSWORD:-}" ]; then
+              echo "[entrypoint] NTFY_ADMIN_PASSWORD was empty: the password is the umbrel"
+              echo "[entrypoint]   app password, or the contents of $${AUTH_DIR}/admin-password.txt"
+            fi
+          else
+            echo "[entrypoint] ERROR: could not create $${ADMIN_USER}" >&2
+          fi
+        fi
+        wait "$${serve_pid}"
     volumes:
-      - ${APP_DATA_DIR}/entrypoint.sh:/entrypoint.sh:ro
       - ${APP_DATA_DIR}/data:/var/lib/ntfy
       - ${APP_DATA_DIR}/cache:/var/cache/ntfy
     environment:
@@ -48,8 +104,8 @@ services:
       # default to empty: the iOS relay is only enabled when you set both of them.
       NTFY_UPSTREAM_BASE_URL: ${NTFY_UPSTREAM_BASE_URL:-}
       NTFY_BASE_URL: ${NTFY_BASE_URL:-}
-      # Only the shell script reads these; the server ignores them.
-      NTFY_ADMIN_USER: ${NTFY_ADMIN_USER:-marco}
+      # Only the startup script reads these; the server ignores them.
+      NTFY_ADMIN_USER: ${NTFY_ADMIN_USER:-umbrel}
       NTFY_ADMIN_PASSWORD: ${NTFY_ADMIN_PASSWORD:-}
       # Per-install password umbrel generates; used when no password is configured.
       UMBREL_APP_PASSWORD: ${APP_PASSWORD:-}
