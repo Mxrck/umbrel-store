@@ -1,0 +1,84 @@
+manifestVersion: 1
+id: mxrck-ntfy
+storage:
+  dataRoot: data
+environment:
+  - name: NTFY_ADMIN_USER
+    services:
+      - app
+    default: "marco"
+    note: Username of the administrator created on first start. Change it only before installing, or delete the app data folder to start over.
+  - name: NTFY_ADMIN_PASSWORD
+    services:
+      - app
+    default: ""
+    note: Password for that administrator. It is applied only when the user does not exist yet, so updating it later does not silently change the password of the running account. Leave empty to skip creating the account (then use `docker exec` and the ntfy CLI).
+  - name: NTFY_ENABLE_LOGIN
+    services:
+      - app
+    default: "true"
+    options:
+      - "true"
+      - "false"
+    note: true requires credentials for everything. Combined with the access setting below, false makes the server open to anyone who can reach it.
+  - name: NTFY_AUTH_DEFAULT_ACCESS
+    services:
+      - app
+    default: "deny-all"
+    options:
+      - "deny-all"
+      - "read-only"
+      - "write-only"
+      - "read-write"
+    note: Access for users that have no explicit topic permission. The administrator created on first start always gets access to every topic.
+  - name: NTFY_BASE_URL
+    services:
+      - app
+    default: ""
+    note: Public address of this server, such as https://ntfy.example.com, when you reach it through a tunnel or reverse proxy. Leave empty to use the Umbrel address.
+  - name: NTFY_UPSTREAM_BASE_URL
+    services:
+      - app
+    default: "https://ntfy.sh"
+    note: Only needed for instant notifications on iOS. Empty disables it.
+  - name: NTFY_CACHE_DURATION
+    services:
+      - app
+    default: "12h"
+    note: How long messages are kept for clients that reconnect, such as 12h or 48h.
+category: automation
+name: ntfy (own admin)
+version: "2.38.1"
+tagline: Pub-sub push notifications with an admin user you configure yourself
+description: >-
+  ntfy (pronounced notify) is a simple HTTP-based pub-sub notification service: publish a message with a plain HTTP
+  request and your phone, browser or scripts receive it. This package is the same ntfy server as the official app, with
+  one difference: the administrator user and password come from the environment, so you decide them from the Umbrel
+  settings instead of inheriting a generated password.
+
+
+  The account is created only when it does not exist yet, and it is never recreated or reset on restart or on update.
+  That is the behaviour the official package lacks.
+
+
+  Works as a UnifiedPush distributor for Android, so Matrix clients and other apps can push without Google services.
+
+
+  Sending a message: curl -u USER:PASSWORD -d "hello" http://YOUR-UMBREL:13120/mytopic
+releaseNotes: ""
+developer: ntfy
+website: https://ntfy.sh
+dependencies: []
+repo: https://github.com/binwiederhier/ntfy
+support: https://github.com/binwiederhier/ntfy/issues
+
+port: 13120
+gallery: []
+path: ""
+icon: https://raw.githubusercontent.com/Mxrck/umbrel-store/master/mxrck-ntfy/icon.png
+
+defaultUsername: ""
+defaultPassword: ""
+
+submitter: ntfy
+submission: ""

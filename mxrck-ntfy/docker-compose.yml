@@ -1,0 +1,52 @@
+version: "3.7"
+
+services:
+  app_proxy:
+    environment:
+      APP_HOST: mxrck-ntfy_app_1
+      APP_PORT: 80
+      # ntfy authenticates its own clients (basic auth, tokens, or the secret in a
+      # UnifiedPush endpoint), so it must not sit behind the Umbrel login: phones and
+      # scripts cannot send that cookie.
+      PROXY_AUTH_ADD: "false"
+
+  # Community-store installs on umbrelOS 2.0 do not pre-create APP_DATA_DIR/data owned
+  # by 1000:1000, so Docker creates it as root and ntfy (uid 1000) cannot write its auth
+  # database. This one-shot container fixes ownership before the app starts.
+  init_data:
+    image: busybox:1.36.1
+    user: "0:0"
+    restart: "no"
+    command: ["sh", "-c", "mkdir -p /data /cache && chown -R 1000:1000 /data /cache"]
+    volumes:
+      - ${APP_DATA_DIR}/data:/data
+      - ${APP_DATA_DIR}/cache:/cache
+
+  app:
+    image: binwiederhier/ntfy:v2.38.1
+    user: "1000:1000"
+    restart: on-failure
+    stop_grace_period: 1m
+    depends_on:
+      init_data:
+        condition: service_completed_successfully
+    entrypoint:
+      - /bin/sh
+      - /entrypoint.sh
+    volumes:
+      - ${APP_DATA_DIR}/entrypoint.sh:/entrypoint.sh:ro
+      - ${APP_DATA_DIR}/data:/var/lib/ntfy
+      - ${APP_DATA_DIR}/cache:/var/cache/ntfy
+    environment:
+      GODEBUG: multipathtcp=0
+      NTFY_CACHE_FILE: /var/cache/ntfy/cache.db
+      NTFY_AUTH_FILE: /var/lib/ntfy/user.db
+      NTFY_ENABLE_LOGIN: ${NTFY_ENABLE_LOGIN:-true}
+      NTFY_AUTH_DEFAULT_ACCESS: ${NTFY_AUTH_DEFAULT_ACCESS:-deny-all}
+      NTFY_CACHE_DURATION: ${NTFY_CACHE_DURATION:-12h}
+      NTFY_UPSTREAM_BASE_URL: ${NTFY_UPSTREAM_BASE_URL:-https://ntfy.sh}
+      NTFY_BASE_URL: ${NTFY_BASE_URL:-}
+      # Only the shell script reads these; the server ignores them.
+      NTFY_ADMIN_USER: ${NTFY_ADMIN_USER:-marco}
+      NTFY_ADMIN_PASSWORD: ${NTFY_ADMIN_PASSWORD:-}
+    container_name: mxrck-ntfy_app_1

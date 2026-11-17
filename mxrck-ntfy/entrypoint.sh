@@ -1,0 +1,34 @@
+#!/bin/sh
+# Runs inside the ntfy container (uid 1000). Starts the server, then makes sure the
+# administrator exists.
+#
+# Why a script: the official Umbrel package runs `ntfy user add ... || true` on every
+# start, which rewrites the password hash with the container's own generated password.
+# That makes the password shown in the UI stop working after any restart or update.
+# Here the account is created ONLY when it is missing, and never touched again.
+set -e
+
+ntfy serve &
+serve_pid=$!
+
+# Give the server a moment to open the auth database.
+sleep 3
+
+if [ -n "${NTFY_ADMIN_USER}" ] && [ -n "${NTFY_ADMIN_PASSWORD}" ]; then
+  if ntfy user list 2>/dev/null | awk 'NR>1 {print $1}' | grep -qx "${NTFY_ADMIN_USER}"; then
+    echo "[entrypoint] user ${NTFY_ADMIN_USER} already exists, leaving it untouched"
+  else
+    echo "[entrypoint] creating admin user ${NTFY_ADMIN_USER}"
+    if NTFY_PASSWORD="${NTFY_ADMIN_PASSWORD}" ntfy user add --role=admin "${NTFY_ADMIN_USER}"; then
+      # Full access to every topic, including the ones UnifiedPush creates later.
+      ntfy access "${NTFY_ADMIN_USER}" '*' read-write || true
+      echo "[entrypoint] admin ${NTFY_ADMIN_USER} created with full topic access"
+    else
+      echo "[entrypoint] ERROR: could not create ${NTFY_ADMIN_USER}" >&2
+    fi
+  fi
+else
+  echo "[entrypoint] NTFY_ADMIN_USER or NTFY_ADMIN_PASSWORD empty: skipping user creation"
+fi
+
+wait "${serve_pid}"
