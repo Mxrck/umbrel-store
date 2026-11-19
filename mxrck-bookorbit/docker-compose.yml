@@ -44,7 +44,7 @@ services:
       APP_URL: http://umbrel.local:10302
       CLIENT_URL: http://umbrel.local:10302
       TZ: America/Mexico_City
-      POSTGRES_HOST: postgres
+      POSTGRES_HOST: mxrck-bookorbit_postgres_1
       POSTGRES_PORT: "5432"
       POSTGRES_USER: bookorbit
       POSTGRES_PASSWORD: 7b0aee8dc43c518eef646e2d
@@ -80,6 +80,7 @@ services:
       start_period: 30s
 
   postgres:
+    container_name: mxrck-bookorbit_postgres_1
     image: pgvector/pgvector:pg18
     restart: unless-stopped
     environment:

@@ -2,7 +2,7 @@ manifestVersion: 1
 id: mxrck-bookorbit
 category: files
 name: BookOrbit
-version: "3.9.0"
+version: "3.9.1"
 tagline: Tu espacio de lectura self-hosted para libros, audiolibros y cómics
 description: >-
   BookOrbit es una plataforma self-hosted de biblioteca y lectura para EPUB, PDF,
@@ -12,9 +12,10 @@ description: >-
   Esta versión incluye el layout de series para cómics y manga (una carpeta por serie,
   "Folders are series"), que agrupa los capítulos sueltos en una sola serie.
 releaseNotes: >-
-  v3.9.0 sobre el paquete anterior de la tienda BigBear (3.2.0). Las migraciones de base
-  de datos corren solas al arrancar. Incluye el modo de biblioteca "Series folders" para
-  cómics y manga, más el resto de mejoras hasta 3.9.0.
+  Paquete 3.9.1 (imagen 3.9.0): arregla el host de Postgres. Umbrel comparte una sola red
+  docker entre apps, así que POSTGRES_HOST=postgres resolvía al Postgres de otra app y la
+  autenticación fallaba. Ahora apunta al contenedor propio y lleva container_name fijo.
+  Las migraciones de base de datos corren solas al arrancar.
 developer: bookorbit
 website: https://bookorbit.app
 dependencies: []
