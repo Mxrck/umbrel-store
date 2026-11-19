@@ -1,0 +1,30 @@
+manifestVersion: 1
+id: mxrck-bookorbit
+category: files
+name: BookOrbit
+version: "3.9.0"
+tagline: Tu espacio de lectura self-hosted para libros, audiolibros y cómics
+description: >-
+  BookOrbit es una plataforma self-hosted de biblioteca y lectura para EPUB, PDF,
+  audiolibros y cómics (CBZ/CBR/CB7). Sincroniza progreso y subrayados entre el lector
+  web, Kobo y KOReader, con búsqueda de metadatos, estadísticas, OPDS y OIDC multiusuario.
+
+  Esta versión incluye el layout de series para cómics y manga (una carpeta por serie,
+  "Folders are series"), que agrupa los capítulos sueltos en una sola serie.
+releaseNotes: >-
+  v3.9.0 sobre el paquete anterior de la tienda BigBear (3.2.0). Las migraciones de base
+  de datos corren solas al arrancar. Incluye el modo de biblioteca "Series folders" para
+  cómics y manga, más el resto de mejoras hasta 3.9.0.
+developer: bookorbit
+website: https://bookorbit.app
+dependencies: []
+repo: https://github.com/Mxrck/umbrel-store
+support: https://github.com/Mxrck/umbrel-store/issues
+port: 10302
+gallery: []
+path: ""
+defaultUsername: ""
+defaultPassword: ""
+icon: https://raw.githubusercontent.com/Mxrck/umbrel-store/master/mxrck-bookorbit/icon.png
+submitter: Mxrck
+submission: https://github.com/Mxrck/umbrel-store

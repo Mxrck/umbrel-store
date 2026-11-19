@@ -1,0 +1,97 @@
+version: "3.7"
+
+# BookOrbit 3.9.0 empaquetado para umbrelOS.
+#
+# Misma forma que el paquete de la tienda BigBear (3.2.0) a propósito: los datos viven
+# en ${APP_DATA_DIR}/data y ${APP_DATA_DIR}/postgresql, así que una instalación nueva
+# puede recibir la biblioteca y la base migradas sin renombrar rutas.
+#
+# POSTGRES_PASSWORD se mantiene igual al valor anterior para que una base migrada siga
+# autenticando; el puerto de Postgres no se publica y sólo es alcanzable dentro de la
+# red del compose.
+
+services:
+  app_proxy:
+    environment:
+      APP_HOST: mxrck-bookorbit_app_1
+      APP_PORT: "3000"
+      # La app tiene su propio login; el proxy de umbrel no debe pedir otro encima.
+      PROXY_AUTH_ADD: "false"
+
+  init_data:
+    image: busybox:1.36
+    restart: "no"
+    user: "0:0"
+    command: >
+      sh -c "
+      mkdir -p /data &&
+      chown 1000:1000 /data &&
+      chown -R 1000:1000 /data/users /data/covers /data/book-dock /data/library 2>/dev/null;
+      echo 'data dir listo' >&2"
+    volumes:
+      - ${APP_DATA_DIR}/data:/data
+
+  app:
+    image: ghcr.io/bookorbit/bookorbit:3.9.0
+    restart: unless-stopped
+    init: true
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      APP_URL: http://umbrel.local:10302
+      CLIENT_URL: http://umbrel.local:10302
+      TZ: America/Mexico_City
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_USER: bookorbit
+      POSTGRES_PASSWORD: 7b0aee8dc43c518eef646e2d
+      POSTGRES_DB: bookorbit
+      JWT_SECRET: 4f1d9c2a7b6e358d0a94c7be21f8d6350c8a4e97b2d1f60a3c5e8b47d92a1f06
+      SETUP_BOOTSTRAP_TOKEN: 9c3e71b5d8a24f06e1c795b3a8d40f26
+      PUID: "1000"
+      PGID: "1000"
+      NODE_MAX_OLD_SPACE_SIZE: "2048"
+      LIBRARY_BROWSE_ROOT: /data/library
+      BOOK_DOCK_PATH: ""
+    volumes:
+      - ${APP_DATA_DIR}/data:/data
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - FOWNER
+      - SETGID
+      - SETUID
+    security_opt:
+      - no-new-privileges:true
+    stop_grace_period: 30s
+    healthcheck:
+      test: ["CMD", "node", "-e", "const p=process.env.PORT||3000;fetch('http://127.0.0.1:'+p+'/api/v1/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  postgres:
+    image: pgvector/pgvector:pg18
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: bookorbit
+      POSTGRES_PASSWORD: 7b0aee8dc43c518eef646e2d
+      POSTGRES_DB: bookorbit
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - ${APP_DATA_DIR}/postgresql:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", 'pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"']
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
