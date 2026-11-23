@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cleaning plan · sidecar de Yuvomi</title>
+<style>
+  :root { color-scheme: light dark; --bg:#f6f7f9; --card:#fff; --ink:#16181d; --muted:#5d6470; --line:#e3e6ea; --ok:#0a7d36; --bad:#b3261e; --accent:#0EA5E9; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#111317; --card:#181b21; --ink:#eef1f5; --muted:#9aa3b0; --line:#2a2f38; --ok:#4ade80; --bad:#ff8a80; } }
+  * { box-sizing: border-box; }
+  body { margin:0; padding:28px 18px 60px; background:var(--bg); color:var(--ink); font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
+  main { max-width: 720px; margin:0 auto; }
+  h1 { font-size:22px; margin:0 0 4px; letter-spacing:-.3px; }
+  p.sub { margin:0 0 22px; color:var(--muted); }
+  section { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px 20px; margin-bottom:14px; }
+  h2 { font-size:14px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin:0 0 12px; }
+  .row { display:flex; align-items:center; gap:10px; font-weight:600; }
+  .dot { width:10px; height:10px; border-radius:50%; background:var(--muted); flex:none; }
+  .dot.ok { background:var(--ok); } .dot.bad { background:var(--bad); }
+  code { background:rgba(127,127,127,.14); padding:2px 6px; border-radius:6px; font-size:13px; word-break:break-all; }
+  ol { margin:0; padding-left:20px; } li { margin-bottom:10px; }
+  a { color:var(--accent); }
+  .muted { color:var(--muted); font-size:13.5px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Cleaning plan · sidecar</h1>
+  <p class="sub">Servicio que guarda el plan de limpieza del módulo de Yuvomi. No tiene interfaz propia: se usa desde dentro de Yuvomi.</p>
+
+  <section>
+    <h2>Estado del servicio</h2>
+    <div class="row"><span id="dot" class="dot"></span><span id="state">Comprobando…</span></div>
+  </section>
+
+  <section>
+    <h2>Para activarlo</h2>
+    <ol>
+      <li>En Yuvomi, <strong>Settings → Modules → Add custom module</strong> con
+        <code>https://github.com/la3mmchen/yuvomi-cleaningplan</code>, y apruébalo en la lista de módulos activos. Necesita <code>MODULES_ALLOW_WEB_INSTALL=true</code> y la carpeta de módulos montada.</li>
+      <li>En tu proxy inverso, manda <code>/api/extensions/cleaningplan/</code> del dominio de Yuvomi a este app (puerto 8183 de este servidor).</li>
+      <li>En <strong>Settings → Household → Roles and permissions</strong>, da <code>ext:cleaningplan</code> a quien deba usarlo: <em>write</em> para editar el plan y generar, <em>read</em> para verlo.</li>
+    </ol>
+    <p class="muted">Esta app no escribe en la base de datos de Yuvomi: crea tareas por su API y valida la sesión del usuario en cada petición. Su plan vive en su propia base SQLite, dentro de la carpeta de datos de esta app.</p>
+  </section>
+</main>
+<script>
+  (function () {
+    var dot = document.getElementById('dot');
+    var state = document.getElementById('state');
+    function set(cls, text) { dot.className = 'dot ' + cls; state.textContent = text; }
+    fetch('/api/extensions/cleaningplan/health', { cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.json() : Promise.reject(r.status); })
+      .then(function (j) { j && j.data && j.data.ok ? set('ok', 'Respondiendo en /api/extensions/cleaningplan') : set('bad', 'Respuesta inesperada'); })
+      .catch(function (e) { set('bad', 'Sin respuesta (' + e + '). Revisa los logs de la app.'); });
+  })();
+</script>
+</body>
+</html>
