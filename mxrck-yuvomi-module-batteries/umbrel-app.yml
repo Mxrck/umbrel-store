@@ -1,0 +1,55 @@
+manifestVersion: 1
+id: mxrck-yuvomi-module-batteries
+storage:
+  dataRoot: data
+environment:
+  - name: YUVOMI_INTERNAL_URL
+    services:
+      - api
+    default: "http://host.docker.internal:8180"
+    note: Cómo alcanza este sidecar a Yuvomi desde su contenedor. El valor por defecto apunta al puerto que este mismo Umbrel publica para Yuvomi (8180). Cámbialo solo si tu Yuvomi escucha en otro puerto o vive en otro equipo.
+  - name: PUBLIC_ORIGIN
+    services:
+      - api
+    default: "http://umbrel.local:8180"
+    note: El origen exacto que escribes en el navegador para abrir Yuvomi, con esquema y host y sin barra final, por ejemplo https://familia.example.com. Toda escritura se rechaza con 403 csrf_invalid si el Origin de la petición no coincide exactamente, así que un valor equivocado se nota como guardados que fallan dentro del módulo.
+  - name: HOUSEHOLD_TZ
+    services:
+      - api
+    default: "America/Merida"
+    note: Zona horaria de la casa con la que se calculan "hoy" y la antigüedad de cada reparto. No depende de la zona del servidor ni del contenedor.
+category: files
+name: Batteries (Yuvomi module)
+version: "0.1.0"
+tagline: Dónde está cada pila recargable, como backend de un módulo de Yuvomi
+description: >-
+  Backend del módulo "Pilas" de Yuvomi. Declaras el stock (tipo, marca y línea), repartes
+  cantidades entre aparatos con una etiqueta libre y la fecha en que las pusiste, y siempre sabes
+  cuántas quedan en el cajón, cuántas en el cargador y cuántas están sin ubicar. La regla dura la
+  cumple el servidor: la suma de lugares nunca puede pasar del stock, y "sin ubicar" se recalcula
+  solo en cada movimiento.
+
+
+  Esta app es solo el sidecar. Los módulos de Yuvomi son código de navegador y no pueden tocar su
+  base de datos, así que este servicio guarda el inventario en su propio archivo SQLite y responde
+  bajo /api/extensions/batteries/ en el origen de Yuvomi. Hace falta además una regla de proxy
+  inverso que mande /api/extensions/batteries/* desde tu dominio de Yuvomi a esta app. La página de
+  estado de la app repite esos pasos y muestra si el servicio responde.
+
+
+  No escribe nunca en la base de Yuvomi: revalida la sesión o el token del llamante contra
+  /api/v1/auth/me en cada petición y obedece el permiso ext:batteries de Ajustes -> Hogar -> Roles y
+  permisos. Las escrituras del navegador exigen además un token CSRF y un Origin exacto.
+
+
+  Los datos viven en la carpeta de datos de esta app (su propio SQLite) y entran en los respaldos de
+  Umbrel. Desinstalar la app borra esos datos: exporta antes con GET /api/extensions/batteries/export.
+  La página del módulo se publica desde esta misma imagen, así que actualizar la app actualiza las
+  dos mitades a la vez.
+developer: Marco Maldonado
+website: https://github.com/Mxrck/yuvomi-batteries
+dependencies:
+  - yuvomi
+repo: https://github.com/Mxrck/umbrel-store
+support: https://github.com/Mxrck/yuvomi-batteries/issues
+port: 8184

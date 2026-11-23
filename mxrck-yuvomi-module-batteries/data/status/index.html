@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pilas (módulo de Yuvomi) — estado</title>
+<style>
+  :root { color-scheme: light dark; --bg:#f8fafc; --fg:#0f172a; --muted:#475569; --card:#fff; --line:#e2e8f0; --ok:#16a34a; --bad:#dc2626; --warn:#b45309; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#0b1220; --fg:#e2e8f0; --muted:#94a3b8; --card:#111a2b; --line:#1e293b; } }
+  * { box-sizing: border-box; }
+  body { margin:0; padding:2rem 1.25rem 4rem; background:var(--bg); color:var(--fg);
+         font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; }
+  main { max-width: 46rem; margin: 0 auto; }
+  h1 { font-size:1.6rem; margin:0 0 .25rem; letter-spacing:-.01em; }
+  p.lead { color:var(--muted); margin:.25rem 0 1.75rem; }
+  section { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:1.15rem 1.25rem; margin-bottom:1rem; }
+  h2 { font-size:1rem; margin:0 0 .6rem; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); }
+  code, pre { font-family: ui-monospace,SFMono-Regular,Menlo,monospace; font-size:.9em; }
+  pre { background:rgba(127,127,127,.12); padding:.7rem .8rem; border-radius:9px; overflow-x:auto; }
+  ol, ul { margin:.4rem 0 .2rem; padding-left:1.2rem; }
+  li { margin:.3rem 0; }
+  .pill { display:inline-flex; align-items:center; gap:.45rem; font-weight:600; }
+  .dot { width:.6rem; height:.6rem; border-radius:50%; background:var(--muted); }
+  .dot.ok { background:var(--ok); } .dot.bad { background:var(--bad); }
+  .warn { border-left:3px solid var(--warn); padding-left:.8rem; color:var(--fg); }
+  a { color:inherit; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Pilas — módulo de Yuvomi</h1>
+  <p class="lead">Backend del módulo de pilas: stock, repartos por aparato y lo que está sin ubicar.</p>
+
+  <section>
+    <h2>Servicio</h2>
+    <p class="pill"><span id="dot" class="dot"></span><span id="state">Comprobando…</span></p>
+    <p><small id="detail"></small></p>
+  </section>
+
+  <section>
+    <h2>Lo que hace</h2>
+    <ul>
+      <li>Declaras un stock: tipo, marca, línea y cantidad (<em>24 AAA Duracell Recharge</em>).</li>
+      <li>Repartes: <em>3 · tren Thomas de Ángel · 12/nov</em>, con la fecha en que las pusiste.</li>
+      <li>Mueves, cambias pilas de un aparato y buscas las que aparecen: todo queda en el historial.</li>
+      <li><strong>Sin ubicar</strong> se recalcula solo en cada movimiento; la suma de lugares nunca puede pasar del stock.</li>
+    </ul>
+    <p>La página vive dentro de Yuvomi (menú <strong>Pilas</strong>) y llama a esta API con tu sesión.
+       Se publica desde la imagen de esta app, así que se actualiza junto con el backend.</p>
+  </section>
+
+  <section>
+    <h2>Si el módulo no aparece en Yuvomi</h2>
+    <ol>
+      <li>Confirma que Yuvomi tiene montada la carpeta de módulos: en Ajustes de esta app vecina,
+          «acceso avanzado a carpetas», <code>/app/modules</code> ← <code>/Home/yuvomi-modules</code>.</li>
+      <li>Reinicia la app de Yuvomi una vez y vuelve a mirar el menú.</li>
+      <li>Si aun así no sale, instálalo desde Yuvomi: <em>Settings → Modules → Add custom module</em> con
+          <code>https://github.com/Mxrck/yuvomi-batteries</code> y apruébalo.</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>Regla de proxy en tu dominio</h2>
+    <p>El módulo llama a <code>/api/extensions/batteries/*</code> en el origen de Yuvomi, así que tu
+       proxy inverso tiene que mandar ese prefijo aquí (Nginx Proxy Manager: <em>Custom locations</em>
+       del host de Yuvomi):</p>
+    <pre>location /api/extensions/batteries {
+    proxy_pass http://IP_DEL_UMBREL:8184;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+}</pre>
+    <p><small>Sin barra final en <code>proxy_pass</code>, para que la ruta llegue intacta.</small></p>
+  </section>
+
+  <section>
+    <h2>Permisos</h2>
+    <p>En Yuvomi, <em>Settings → Household → Roles and permissions</em>: el permiso <code>ext:batteries</code>
+       decide quién escribe. Ojo: el valor por defecto de un módulo nuevo es <strong>escritura para todos
+       los miembros</strong>; si quieres que alguien solo mire, bájalo a lectura.</p>
+  </section>
+
+  <section>
+    <h2>Datos y respaldo</h2>
+    <p class="warn"><strong>Desinstalar esta app borra su carpeta de datos</strong>, y con ella el stock y el
+       historial. Antes de desinstalar, guarda un respaldo:</p>
+    <pre>curl -s -H "Authorization: Bearer TU_TOKEN_DE_YUVOMI" \
+  https://TU_DOMINIO/api/extensions/batteries/export &gt; pilas.json</pre>
+    <p>Con la app instalada, los datos entran en los respaldos normales de Umbrel.</p>
+  </section>
+
+  <section>
+    <h2>Un consejo que no es software</h2>
+    <p>Marca físicamente las recargables —una letra o un color por línea— para que al abrir un aparato
+       sepas si esas pilas son las tuyas o unas alcalinas cualquiera. Con eso el registro deja de
+       depender de la memoria.</p>
+  </section>
+</main>
+<script>
+  const dot = document.getElementById('dot');
+  const state = document.getElementById('state');
+  const detail = document.getElementById('detail');
+  fetch('/api/extensions/batteries/health', { headers: { Accept: 'application/json' } })
+    .then((r) => r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status)))
+    .then((j) => {
+      dot.className = 'dot ok';
+      state.textContent = j && j.ok ? 'Respondiendo' : 'Respondiendo (forma inesperada)';
+      detail.textContent = 'El sidecar contesta en /api/extensions/batteries/health.';
+    })
+    .catch((e) => {
+      dot.className = 'dot bad';
+      state.textContent = 'No responde';
+      detail.textContent = 'No se pudo leer /api/extensions/batteries/health: ' + e.message;
+    });
+</script>
+</body>
+</html>
