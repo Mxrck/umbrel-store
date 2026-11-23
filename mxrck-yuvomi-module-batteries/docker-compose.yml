@@ -34,7 +34,10 @@ services:
           listen 8080;
           server_tokens off;
           location /api/extensions/batteries/ {
-            proxy_pass http://api:3100;
+            # Nombre único del contenedor, NO el alias corto "api": todos los servicios de
+            # todas las apps comparten umbrel_main_network, así que "api" resuelve a varios
+            # contenedores y nginx reparte las peticiones entre ellos (404 intermitentes).
+            proxy_pass http://mxrck-yuvomi-module-batteries_api_1:3100;
             proxy_http_version 1.1;
             proxy_set_header Host $$host;
             proxy_set_header X-Forwarded-For $$proxy_add_x_forwarded_for;
