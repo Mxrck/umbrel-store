@@ -15,7 +15,7 @@ environment:
     note: The exact origin you type in the browser to open Yuvomi, with scheme and host and no trailing slash, for example https://familia.example.com. Every write is refused with 403 csrf_invalid unless the request Origin matches this value exactly, so a wrong entry shows up as failing saves inside the module.
 category: files
 name: Cleaning plan (Yuvomi module)
-version: "0.2.1"
+version: "0.2.2"
 tagline: Rooms and recurring cleaning tasks, as a Yuvomi module backend
 description: >-
   Backend service for the "Cleaning plan" module of Yuvomi. Define rooms, the activities in each
