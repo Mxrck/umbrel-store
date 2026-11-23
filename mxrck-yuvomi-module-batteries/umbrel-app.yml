@@ -20,7 +20,7 @@ environment:
     note: Zona horaria de la casa con la que se calculan "hoy" y la antigüedad de cada reparto. No depende de la zona del servidor ni del contenedor.
 category: files
 name: Batteries (Yuvomi module)
-version: "0.1.1"
+version: "0.1.2"
 tagline: Dónde está cada pila recargable, como backend de un módulo de Yuvomi
 description: >-
   Backend del módulo "Pilas" de Yuvomi. Declaras el stock (tipo, marca y línea), repartes

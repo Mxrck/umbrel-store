@@ -59,7 +59,7 @@ services:
     # La imagen trae también la página del módulo y la publica en /modules-out, que es la carpeta de
     # módulos de Yuvomi montada desde /Home/yuvomi-modules (customMounts), para que las dos mitades
     # viajen en la misma versión y nadie tenga que aprobar el módulo a mano.
-    image: ghcr.io/mxrck/yuvomi-batteries@sha256:41a6db53226065e59318185451fd80324d25eae9826cbbadaa2ff1dc1c6b93b5
+    image: ghcr.io/mxrck/yuvomi-batteries@sha256:05e7d1f8e384f9de4b73be58919b26708868546987bac3cc776c466d4be60f57
     restart: on-failure
     stop_grace_period: 1m
     # Alcanza Yuvomi por el puerto que Umbrel publica en este equipo, así funciona sin importar cómo
